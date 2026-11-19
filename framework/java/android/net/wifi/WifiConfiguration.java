@@ -1931,7 +1931,7 @@ public class WifiConfiguration implements Parcelable {
      */
     @SystemApi
     @MacRandomizationSetting
-    public int macRandomizationSetting = RANDOMIZATION_ALWAYS;
+    public int macRandomizationSetting = RANDOMIZATION_PERSISTENT;
 
     /**
      * Set the MAC randomization setting for this network.
