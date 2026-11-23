@@ -1926,12 +1926,12 @@ public class WifiConfiguration implements Parcelable {
      * One of {@link #RANDOMIZATION_NONE}, {@link #RANDOMIZATION_AUTO},
      * {@link #RANDOMIZATION_PERSISTENT} or {@link #RANDOMIZATION_NON_PERSISTENT}.
      * {@link #RANDOMIZATION_PERSISTENT} or {@link #RANDOMIZATION_NON_PERSISTENT} or RANDOMIZATION_ALWAYS.
-     * By default this field is set to RANDOMIZATION_ALWAYS in GrapheneOS.
+     * By default this field is set to RANDOMIZATION_AUTO, as in AOSP.
      * @hide
      */
     @SystemApi
     @MacRandomizationSetting
-    public int macRandomizationSetting = RANDOMIZATION_ALWAYS;
+    public int macRandomizationSetting = RANDOMIZATION_AUTO;
 
     /**
      * Set the MAC randomization setting for this network.
