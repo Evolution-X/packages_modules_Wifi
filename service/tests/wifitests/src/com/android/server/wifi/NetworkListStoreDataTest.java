@@ -93,7 +93,7 @@ public class NetworkListStoreDataTest extends WifiBaseTest {
     private static final int TEST_CREATOR_USER_ID = 999;
 
     private static final String SINGLE_OPEN_NETWORK_DATA_XML_STRING_FORMAT =
-            "<Network>\n"
+            "<Network MacRandomizationMigrated=\"1\">\n"
                     + "<WifiConfiguration>\n"
                     + "<string name=\"ConfigKey\">%s</string>\n"
                     + "<string name=\"SSID\">%s</string>\n"
@@ -191,7 +191,7 @@ public class NetworkListStoreDataTest extends WifiBaseTest {
                     + "</Network>\n";
 
     private static final String SINGLE_EAP_NETWORK_DATA_XML_STRING_FORMAT =
-            "<Network>\n"
+            "<Network MacRandomizationMigrated=\"1\">\n"
                     + "<WifiConfiguration>\n"
                     + "<string name=\"ConfigKey\">%s</string>\n"
                     + "<string name=\"SSID\">%s</string>\n"
@@ -322,7 +322,7 @@ public class NetworkListStoreDataTest extends WifiBaseTest {
                     + "</Network>\n";
 
     private static final String SINGLE_SAE_NETWORK_DATA_XML_STRING_FORMAT =
-            "<Network>\n"
+            "<Network MacRandomizationMigrated=\"1\">\n"
                     + "<WifiConfiguration>\n"
                     + "<string name=\"ConfigKey\">%s</string>\n"
                     + "<string name=\"SSID\">%s</string>\n"

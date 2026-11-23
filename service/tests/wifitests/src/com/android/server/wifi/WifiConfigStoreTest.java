@@ -89,7 +89,7 @@ public class WifiConfigStoreTest extends WifiBaseTest {
                     + "<WifiConfigStoreData>\n"
                     + "<int name=\"Version\" value=\"3\" />\n"
                     + "<NetworkList>\n"
-                    + "<Network>\n"
+                    + "<Network MacRandomizationMigrated=\"1\">\n"
                     + "<WifiConfiguration>\n"
                     + "<string name=\"ConfigKey\">%s</string>\n"
                     + "<string name=\"SSID\">%s</string>\n"

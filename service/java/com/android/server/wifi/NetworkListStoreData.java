@@ -59,6 +59,14 @@ public abstract class NetworkListStoreData implements WifiConfigStore.StoreData 
 
     private static final String XML_TAG_SECTION_HEADER_NETWORK_LIST = "NetworkList";
     private static final String XML_TAG_SECTION_HEADER_NETWORK = "Network";
+    /**
+     * Attribute of a {@code <Network>} section. It marks a network that has already been through
+     * {@link #migrateMacRandomizationSettingIfNeeded}, so the one-time migration of stored
+     * {@link WifiConfiguration#RANDOMIZATION_ALWAYS} values does not undo an explicit
+     * per-connection choice made after the migration.
+     */
+    private static final String XML_ATTR_MAC_RANDOMIZATION_MIGRATED =
+            "MacRandomizationMigrated";
     private static final String XML_TAG_SECTION_HEADER_WIFI_CONFIGURATION = "WifiConfiguration";
     private static final String XML_TAG_SECTION_HEADER_NETWORK_STATUS = "NetworkStatus";
     private static final String XML_TAG_SECTION_HEADER_IP_CONFIGURATION = "IpConfiguration";
@@ -164,6 +172,9 @@ public abstract class NetworkListStoreData implements WifiConfigStore.StoreData 
             @Nullable WifiConfigStoreEncryptionUtil encryptionUtil)
             throws XmlPullParserException, IOException {
         XmlUtil.writeNextSectionStart(out, XML_TAG_SECTION_HEADER_NETWORK);
+        // This network has been through the RANDOMIZATION_ALWAYS migration, so its stored
+        // value is a deliberate choice and must not be rewritten on the next load.
+        out.attribute(null, XML_ATTR_MAC_RANDOMIZATION_MIGRATED, "1");
 
         // Serialize WifiConfiguration.
         XmlUtil.writeNextSectionStart(out, XML_TAG_SECTION_HEADER_WIFI_CONFIGURATION);
@@ -208,20 +219,57 @@ public abstract class NetworkListStoreData implements WifiConfigStore.StoreData 
             @Nullable WifiConfigStoreEncryptionUtil encryptionUtil)
             throws XmlPullParserException, IOException {
         List<WifiConfiguration> networkList = new ArrayList<>();
+        int migratedCount = 0;
         while (XmlUtil.gotoNextSectionWithNameOrEnd(in, XML_TAG_SECTION_HEADER_NETWORK,
                 outerTagDepth)) {
+            final boolean macRandomizationMigrated = "1".equals(
+                    in.getAttributeValue(null, XML_ATTR_MAC_RANDOMIZATION_MIGRATED));
             // Try/catch only runtime exceptions (like illegal args), any XML/IO exceptions are
             // fatal and should abort the entire loading process.
             try {
                 WifiConfiguration config =
                         parseNetwork(in, outerTagDepth + 1, version, encryptionUtil);
+                if (migrateMacRandomizationSettingIfNeeded(config, macRandomizationMigrated)) {
+                    migratedCount++;
+                }
                 networkList.add(config);
             } catch (RuntimeException e) {
                 // Failed to parse this network, skip it.
                 Log.e(TAG, "Failed to parse network config. Skipping...", e);
             }
         }
+        if (migratedCount > 0) {
+            Log.i(TAG, "Migrated " + migratedCount + " network(s) from RANDOMIZATION_ALWAYS to"
+                    + " RANDOMIZATION_AUTO");
+        }
         return networkList;
+    }
+
+    /**
+     * One-time migration of networks stored with {@link WifiConfiguration#RANDOMIZATION_ALWAYS}.
+     *
+     * <p>100 is the value of {@code RANDOMIZATION_ALWAYS}, which a GrapheneOS cherry-pick made
+     * the field default of {@link WifiConfiguration} until the previous commit, so it is not a
+     * user choice. It makes the framework re-randomize the MAC address on every connection,
+     * which fills up the DHCP pool of the network. Rewrite it to
+     * {@link WifiConfiguration#RANDOMIZATION_AUTO}, the AOSP default, when the network is
+     * loaded.
+     *
+     * <p>Networks that carry {@link #XML_ATTR_MAC_RANDOMIZATION_MIGRATED} are skipped, so the
+     * migration runs once per network and an explicit per-connection choice made afterwards is
+     * kept. The attribute is written with the next store write, together with the migrated
+     * value.
+     *
+     * @return whether the configuration was migrated.
+     */
+    private static boolean migrateMacRandomizationSettingIfNeeded(WifiConfiguration config,
+            boolean macRandomizationMigrated) {
+        if (macRandomizationMigrated
+                || config.macRandomizationSetting != WifiConfiguration.RANDOMIZATION_ALWAYS) {
+            return false;
+        }
+        config.macRandomizationSetting = WifiConfiguration.RANDOMIZATION_AUTO;
+        return true;
     }
 
     /**
